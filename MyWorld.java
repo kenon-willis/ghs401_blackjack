@@ -27,6 +27,8 @@ public class MyWorld extends World
     private int playerY;
     private int playerCardHeight;
     private int compCardHeight;
+    private int winnings;
+    private int amountWagered;
     
     //instance variables for scoring 
     private int playerTotal;
@@ -52,7 +54,7 @@ public class MyWorld extends World
         
         //postitioning of text and cards
         compTextY=470;
-        playerTextY=60;
+        playerTextY=70;
         
         rowWidth=200;
         colWidth=150;
@@ -68,12 +70,14 @@ public class MyWorld extends World
         playerCardHeight=200;
         compCardHeight=compTextY+20;
         
-          
+        //scoring variables initialization
         playerWins=0;
         gamesPlayed=0;
+        winnings=10000;
+        amountWagered=100;
         
         
-        //sets up game
+        //sets up game, deals new cards, updates score, etc
         resetGame();
         
         
@@ -88,8 +92,8 @@ public class MyWorld extends World
     
     public void act(){
         
-        //??????????????????????????????? Place your comment here to explain code below
-        if(Greenfoot.isKeyDown("h") && !keyHisDown && playerTotal<21 && gameIsActive){
+        // if your code in hitDecision() returns true, and the h key is not pressed, and the player has less than 21, and the games is active, then hit for the next card
+        if(hitDecision() && !keyHisDown && playerTotal<21 && gameIsActive){
             
             hit();
             keyHisDown=true;
@@ -100,7 +104,8 @@ public class MyWorld extends World
             keyHisDown=false;
           
         }
-        if(Greenfoot.isKeyDown("s") && !keySisDown && gameIsActive){
+        // if your code in stayDecision() returns true, and the s key is not pressed, and the games is active, then the player will stay
+        if(stayDecision() && !keySisDown && gameIsActive){
             
             stay();
             keySisDown=true;
@@ -116,6 +121,12 @@ public class MyWorld extends World
             
             resetGame();
             
+        }
+        
+         // if your code in doubleBetDecision() returns true, and the player only has two cards, then the player will stay
+        if(doubleBetDecision() && cardsRevealed==2){
+            amountWagered=200;
+            addObject(new TitleScore("$$",56,100),getWidth()-50,140);
         }
         
     }
@@ -134,18 +145,27 @@ public class MyWorld extends World
         
         //??????????????????????????????? Place your comment here to explain code below
         playerTotal+=valueOfCard;
-        addObject(new TitleScore("P:" + playerTotal,50), getWidth()-75, playerTextY+150);
+        removeObjects(getObjects(TitleScore.class));
+        addObject(new TitleScore("'H' to hit       'S' to stay       'Space' to start next hand       Wager=$100       'Up Arrow' when player has 2 cards to increase wager to $200",20,1000),getWidth()/2,20);
+        addObject(new TitleScore("P:" + playerTotal,50,100), getWidth()-75, playerTextY+150);
         
         //showText(Integer.toString(playerTotal),cardsRevealed*colWidth,playerTextY+20);
         
+        if(playerTotal==21){
+            stay();
+            
+        }
         
         //??????????????????????????????? Place your comment here to explain code below
         if(playerTotal>21){
-            addObject(new Title("BUST",75,180,1), getWidth()/2, playerTextY+200);
+            addObject(new Title("  Bust",55,170,1), getWidth()/2, playerTextY+200);
+            addObject(new Title("Winner!",55,180,3), getWidth()/2, compTextY+200);
             canResetGame = true;
             gamesPlayed++;
+            winnings-=amountWagered;
             updateScore();
             gameIsActive=false;
+            
         }
         
     }
@@ -168,10 +188,10 @@ public class MyWorld extends World
         }
         
         
-        addObject(new TitleScore("D:" + compTotal,50), getWidth()-75, compTextY+150);
+        addObject(new TitleScore("D:" + compTotal,50,100), getWidth()-75, compTextY+150);
         
         if(compTotal>21){
-            addObject(new Title("BUST",75,180,1), getWidth()/2, compTextY+200);
+            addObject(new Title("  Bust",55,170,1), getWidth()/2, compTextY+150);
             
         }
         
@@ -215,9 +235,13 @@ public class MyWorld extends World
     
     public void resetGame(){
         
+        //removes old text so there is no layering of new text updates
         removeObjects(getObjects(Card.class));
         removeObjects(getObjects(Title.class));
         removeObjects(getObjects(TitleScore.class));
+        removeObjects(getObjects(TitleScoreboard.class));
+        
+        //resets all variables to default
         keySisDown = false;
         keyHisDown = false;
         canResetGame = false;
@@ -225,6 +249,7 @@ public class MyWorld extends World
         cardsRevealed=0;
         compCardsRevealed=1;
         playerTotal=0;
+        amountWagered=100;//default wager amount"
         
         
         //??????????????????????????????? Place your comment here to explain code below
@@ -234,9 +259,13 @@ public class MyWorld extends World
         }
         
         
-        addObject(new TitleScore("Player",24),colWidth,playerTextY);
-        showText("'H' to hit   'S' to stay   'Space' to start next hand",getWidth()/2,20);
-        addObject(new TitleScore("Dealer",24),colWidth,compTextY);
+        addObject(new TitleScore("Player",24,100),colWidth,playerTextY);
+        addObject(new TitleScore("'H' to hit       'S' to stay       'Space' to start next hand       Wager=$100       'Up Arrow' when player has 2 cards to increase wager to $200",20,1000),getWidth()/2,20);
+        //showText("'H' to hit   'S' to stay   'Space' to start next hand   Wager=$100  'Up Arrow' on new hand =Doubles wager to $200",getWidth()/2,20);
+        //showText("$$$$$",30,100);
+        
+        addObject(new TitleScore("$",55,100),getWidth()-50,140);
+        addObject(new TitleScore("Dealer",24,100),colWidth,compTextY);
         
         
         
@@ -259,6 +288,15 @@ public class MyWorld extends World
         //??????????????????????????????? Place your comment here to explain code below
         if(compTotal>21 ||  playerTotal > compTotal){
             playerWins++;
+            winnings+=amountWagered;
+            addObject(new Title("Winner!",55,180,3), getWidth()/2, playerTextY+150);
+        }
+        else if(playerTotal==compTotal){
+            addObject(new Title("Push",75,180,4), getWidth()/2, getHeight()/2);
+        }
+        else{
+            addObject(new Title("Winner!",55,180,3), getWidth()/2, compTextY+150);
+            winnings-=amountWagered;
         }
         if(playerTotal==compTotal){
             gamesPlayed--;
@@ -266,18 +304,53 @@ public class MyWorld extends World
         updateScore();
     }
     
-    
+    //calculates wins, win%, and winnings and updates to screen
     private void updateScore(){
         double winPerc=0.0;
+        double winPercRounded=0.0;
         if(gamesPlayed>0)
         {
-            winPerc = (double)playerWins/gamesPlayed;
-            winPerc = Math.round(winPerc*1000)/1000.0;
-            winPerc*=100;
+            winPerc = (double)(playerWins)/(gamesPlayed);
+            winPercRounded =100* Math.round(winPerc*1000)/1000.0;
+            
+            
         }
       
+        //remove all old text objects so there is no layering effect, than add the new text objects
+        removeObjects(getObjects(TitleScoreboard.class));
+        addObject(new TitleScoreboard("Wins      " + playerWins + "/"+gamesPlayed,30,200,2), getWidth()-150, compTextY-130);
+        addObject(new TitleScoreboard("Win%     " + winPercRounded,30,200,2), getWidth()-150, compTextY-80);
+        addObject(new TitleScoreboard("Winnings $" +winnings,30,200,2), getWidth()-150, compTextY-30);
         
-        addObject(new Title("Wins:" + playerWins + "/"+gamesPlayed + "  Win%: " + winPerc,40,400,2), getWidth()-400, compTextY-100);
+    }
+    
+    
+    
+    
+    //*******************These are the methods you code the strategy!!  If done correctly, all you have to do is 
+    //*******************hold the spacebar down to play multiple hands in succession to test your strategy
+    public boolean hitDecision(){
+        boolean hit=Greenfoot.isKeyDown("h");
+        
+        return hit;
+        
+        
+    }
+    
+    public boolean stayDecision(){
+        boolean stay=Greenfoot.isKeyDown("s");
+        
+        return stay;
+        
+        
+    }
+    
+    
+    public boolean doubleBetDecision(){
+        boolean doubleBet=Greenfoot.isKeyDown("up");
+        
+        return doubleBet;
+        
         
     }
     

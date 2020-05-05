@@ -19,18 +19,26 @@ public class Title extends Actor
     public Title(String text, int fontsize, int rectW, int colorChoice){
         //setImage(new GreenfootImage("\"Flappy Bird\" by Mr. Willis", 33, Color.red, null));
          
-       
         Color fontColor = Color.BLACK; // change as desired
+        
+        if(colorChoice==1)
+            fontColor = Color.RED; // change as desired
+        else if(colorChoice==2)
+            fontColor=Color.YELLOW;
+        else if(colorChoice==3)
+            fontColor=Color.GREEN;
+        else
+            fontColor=Color.ORANGE;
+            
+            
+        
         Color bgColor = new Color(0, 0, 0, 0); // transparent background
         GreenfootImage txtImg = new GreenfootImage(text, fontsize, fontColor, bgColor);
         // create the base image
-        GreenfootImage img = new GreenfootImage(rectW, 100);
-        if(colorChoice==1)
-            bgColor = Color.RED; // change as desired
-        else
-            bgColor=Color.YELLOW;
-        img.setColor(bgColor);
-        img.fill();
+        GreenfootImage img = new GreenfootImage(rectW, 100);    
+            
+        //img.setColor(bgColor);
+        //img.fill();
         // draw text image on base image
         img.drawImage(txtImg, 10, 5);
         setImage(img);
